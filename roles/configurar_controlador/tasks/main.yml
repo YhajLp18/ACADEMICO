@@ -130,12 +130,12 @@
 # ====== 6) Verificación ======
 - name: "📊 [10/12] Verificar instalación de Ansible"
   command: ansible --version
-  register: ansible_version
+  register: ans_cmd
   changed_when: false
 
 - name: "📊 [11/12] Verificar colecciones de Ansible Galaxy"
   command: ansible-galaxy collection list
-  register: collections_list
+  register: galaxy_list
   changed_when: false
 
 - name: "🧩 [12/12] RESULTADO FINAL"
@@ -147,9 +147,9 @@
       👤 Usuario controlador: {{ controller_user }}
       📂 Repo raíz configurado: {{ repo_root }}
       🧠 Versión de Ansible:
-      {{ ansible_version.stdout }}
+      {{ ans_cmd.stdout | default('No disponible') }}
       🧱 Colecciones (vmware):
-      {{ collections_list.stdout | regex_search('community.vmware[^\n]*', multiline=True) }}
+      {{ (galaxy_list.stdout | default('')) | regex_search('community.vmware[^\n]*', multiline=True) }}
       🗝️ Clave pública SSH:
       /home/{{ controller_user }}/.ssh/id_rsa.pub
       ═══════════════════════════════════════════════════════
