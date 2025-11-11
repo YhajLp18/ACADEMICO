@@ -1,0 +1,17 @@
+- name: Montar ISO por IDE (0:0)
+  community.vmware.vmware_guest:
+    hostname: "{{ esxi_host }}"
+    port: "{{ esxi_port }}"
+    username: "{{ esxi_user }}"
+    password: "{{ esxi_pass }}"
+    validate_certs: "{{ validate_certs }}"
+    esxi_hostname: "{{ esxi_hostname }}"
+    folder: "{{ folder }}"
+    name: "{{ vm.name }}"
+    state: present
+    cdrom:
+      - type: iso
+        iso_path: "{{ vm.iso_path }}"
+        controller_type: ide
+        controller_number: 0
+        unit_number: 0

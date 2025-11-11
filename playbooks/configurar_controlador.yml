@@ -1,0 +1,21 @@
+---
+- name: Configurar el servidor controlador de Ansible
+  hosts: controller
+  become: yes
+  vars_files:
+    - ../roles/configurar_controlador/vars/main.yml
+
+  roles:
+    - configurar_controlador
+  
+  post_tasks:
+    - name: "✅ CONFIGURACIÓN FINALIZADA CON ÉXITO"
+      debug:
+        msg: |
+          🎯 El nodo controlador ya está listo.
+          ────────────────────────────────────────
+          Usa:
+              ansible --version
+              ansible-inventory --list
+              ansible all -m ping
+          para probar la instalación.

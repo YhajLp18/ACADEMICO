@@ -1,0 +1,18 @@
+# pair.0 -> resultado IDE; pair.1 -> vm (de la lista original)
+- name: Montar ISO por SATA si IDE falló
+  community.vmware.vmware_guest:
+    hostname: "{{ esxi_host }}"
+    port: "{{ esxi_port }}"
+    username: "{{ esxi_user }}"
+    password: "{{ esxi_pass }}"
+    validate_certs: "{{ validate_certs }}"
+    esxi_hostname: "{{ esxi_hostname }}"
+    folder: "{{ folder }}"
+    name: "{{ pair.1.name }}"
+    state: present
+    cdrom:
+      - type: iso
+        iso_path: "{{ pair.1.iso_path }}"
+        controller_type: sata
+        controller_number: 0
+        unit_number: 0

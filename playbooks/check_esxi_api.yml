@@ -1,0 +1,22 @@
+- hosts: localhost
+  gather_facts: no
+
+  vars:
+    esxi_host: "168.121.48.254"
+    esxi_port: 443
+
+  tasks:
+    - name: Probar acceso a la API de ESXi (SDK)
+      ansible.builtin.uri:
+        url: "https://{{ esxi_host }}:{{ esxi_port }}/sdk"
+        method: GET
+        return_content: no
+        validate_certs: no
+        status_code: 200,301,302
+        timeout: 10
+      register: sdk_probe
+      failed_when: sdk_probe is failed
+
+    - name: Mostrar resultado
+      debug:
+        msg: "✅ OK: API /sdk accesible en https://{{ esxi_host }}:{{ esxi_port }}/sdk"

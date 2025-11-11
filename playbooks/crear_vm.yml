@@ -1,0 +1,88 @@
+---
+# =====================================================
+# 🧰 CREAR MÁQUINA VIRTUAL EN VMWARE (AVANZADO)
+# =====================================================
+
+- name: "🚀 Crear nueva máquina virtual en VMware ESXi"
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    # === 🔐 CREDENCIALES DE ESXi ===
+    esxi_hostname: "172.17.25.121"
+    esxi_user: "root"
+    esxi_pass: "TuClave"
+    datastore: "datastore1"
+    portgroup: "VM Network"
+    validate_certs: false
+
+    # === ⚙️ CONFIGURACIÓN GENERAL DE VM ===
+    vm_name: "VM-Academico-Ubuntu"     # cambia el nombre
+    os_type: "ubuntu"                  # opciones: ubuntu / windows
+    vm_cpu: 2
+    vm_ram_mb: 4096
+    vm_disk_gb: 40
+    folder: "/"
+
+    # === 📀 RUTA DEL ISO SEGÚN TIPO DE SISTEMA ===
+    iso_path_ubuntu: "[datastore1] iso/ubuntu-24.04.3-live-server-amd64.iso"
+    iso_path_windows: "[datastore1] iso/Win11.iso"
+
+  tasks:
+
+    - name: "📡 Conectando con el host ESXi"
+      community.vmware.vmware_about_info:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+      register: about
+    - debug:
+        msg: "Conectado a {{ about.about.name }} versión {{ about.about.version }}"
+
+    - name: "🧱 Definir parámetros según sistema operativo"
+      set_fact:
+        guest_id: "{{ 'ubuntu64Guest' if os_type == 'ubuntu' else 'windows9Server64Guest' }}"
+        iso_path: "{{ iso_path_ubuntu if os_type == 'ubuntu' else iso_path_windows }}"
+      tags: always
+
+    - name: "🖥️ Crear máquina virtual"
+      community.vmware.vmware_guest:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "{{ vm_name }}"
+        state: poweredon
+        guest_id: "{{ guest_id }}"
+        disk:
+          - size_gb: "{{ vm_disk_gb }}"
+            type: thin
+            datastore: "{{ datastore }}"
+        hardware:
+          memory_mb: "{{ vm_ram_mb }}"
+          num_cpus: "{{ vm_cpu }}"
+          scsi: paravirtual
+        networks:
+          - name: "{{ portgroup }}"
+            device_type: vmxnet3
+        cdrom:
+          type: iso
+          iso_path: "{{ iso_path }}"
+        folder: "{{ folder }}"
+        wait_for_ip_address: no
+      register: vm_creation
+
+    - name: "📊 Resultado de creación"
+      debug:
+        msg: |
+          ✅ VM creada: {{ vm_creation.instance.hw_name }}
+          💾 Datastore: {{ datastore }}
+          🌐 Red: {{ portgroup }}
+          🔌 Estado: {{ vm_creation.instance.hw_power_status }}
+
+    - name: "🧠 Mensaje final"
+      debug:
+        msg: |
+          🎯 VM {{ vm_name }} creada exitosamente.
+          Puedes verla en tu host ESXi: {{ esxi_hostname }}

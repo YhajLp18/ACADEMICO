@@ -1,0 +1,33 @@
+---
+# =====================================================
+# 🧠 CONFIGURACIÓN DEL LABORATORIO ACADÉMICO
+# =====================================================
+
+# 1️⃣ Bootstrap inicial (ya hecho, pero se puede mantener)
+- name: 🧩 Verificar y preparar nodos
+  hosts: all
+  become: yes
+  roles:
+    - verificar_requisitos_VMS
+
+# 2️⃣ Configurar Linux base
+- name: 🧱 Configuración base en Linux
+  hosts: ubuntu
+  become: yes
+  roles:
+    - users_linux     # crea y configura usuarios
+    - packages_linux  # instala paquetes comunes
+    - security_linux  # firewall, actualizaciones, sudoers (opcional)
+
+# 3️⃣ Configurar Windows base
+- name: 🪟 Configuración base en Windows
+  hosts: windows
+  roles:
+    - users_windows
+    - packages_windows
+
+# 4️⃣ Pruebas de conectividad y resumen
+- name: 🧪 Validar conectividad final
+  hosts: all
+  roles:
+    - pruebas_conectividad

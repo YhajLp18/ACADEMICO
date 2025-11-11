@@ -1,0 +1,7 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for roles/verificar_requisitos_VMS
+- name: restart ssh
+  service:
+    name: ssh
+    state: restarted

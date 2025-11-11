@@ -1,0 +1,100 @@
+---
+- name: "🧱 [1/12] Actualizando repositorios del sistema"
+  apt:
+    update_cache: yes
+  changed_when: false
+
+- name: "🔧 [2/12] Instalando dependencias básicas"
+  apt:
+    name:
+      - python3
+      - python3-pip
+      - git
+      - openssh-client
+      - curl
+      - vim
+      - net-tools
+      - software-properties-common
+    state: present
+  tags: deps
+
+- name: "📦 [3/12] Instalando Ansible"
+  apt:
+    name: ansible
+    state: present
+
+- name: "🐍 [4/12] Instalando librerías Python necesarias"
+  pip:
+    name:
+      - pyvmomi
+      - pywinrm
+      - requests
+      - jmespath
+      - passlib
+    state: present
+
+- name: "📂 [5/12] Creando estructura de carpetas para proyectos Ansible"
+  file:
+    path: "/home/{{ ansible_user }}/ansible-proyectos"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+
+- name: "🔑 [6/12] Generando par de claves SSH (para conexión con otros hosts)"
+  openssh_keypair:
+    path: "/home/{{ ansible_user }}/.ssh/id_rsa"
+    type: rsa
+    size: 2048
+    owner: "{{ ansible_user }}"
+    mode: '0600'
+  register: ssh_key
+
+- name: "📜 [7/12] Mostrando clave pública generada"
+  debug:
+    msg: "{{ lookup('file', '/home/' + ansible_user + '/.ssh/id_rsa.pub') }}"
+
+- name: "⚙️ [8/12] Configurando ansible.cfg global"
+  copy:
+    dest: /etc/ansible/ansible.cfg
+    content: |
+      [defaults]
+      inventory = /home/{{ ansible_user }}/ansible-controller-setup/inventories/hosts.ini
+      roles_path = /home/{{ ansible_user }}/ansible-controller-setup/roles
+      host_key_checking = False
+      retry_files_enabled = False
+      interpreter_python = auto
+      stdout_callback = yaml
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "📦 [9/12] Instalando colección community.vmware desde Galaxy"
+  ansible.builtin.command: ansible-galaxy collection install community.vmware
+  register: vmware_install
+  changed_when: "'Successfully installed' in vmware_install.stdout or 'already installed' in vmware_install.stdout"
+
+- name: "📊 [10/12] Verificando instalación de Ansible"
+  command: ansible --version
+  register: ansible_version
+  changed_when: false
+
+- name: "📊 [11/12] Verificando instalación de community.vmware"
+  command: ansible-galaxy collection list
+  register: collections_list
+  changed_when: false
+
+- name: "🧩 [12/12] RESULTADO FINAL"
+  debug:
+    msg: |
+      ═══════════════════════════════════════════════════════
+      ✅ Instalación completa del controlador Ansible
+      ═══════════════════════════════════════════════════════
+      🧠 Versión de Ansible instalada:
+      {{ ansible_version.stdout }}
+      🧱 Colecciones disponibles:
+      {{ collections_list.stdout | regex_search('community.vmware[^\n]*', multiline=True) }}
+      ───────────────────────────────────────────────────────
+      🎯 Controlador listo para usar con Linux, Windows y VMware
+      🗝️ Clave pública SSH disponible en:
+      /home/{{ ansible_user }}/.ssh/id_rsa.pub
+      ═══════════════════════════════════════════════════════

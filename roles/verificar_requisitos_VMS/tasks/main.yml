@@ -1,0 +1,110 @@
+---
+- name: "══════════════════════════════════════════"
+  debug:
+    msg: "▶️ VERIFICACIÓN INICIAL DEL NODO: {{ inventory_hostname }}"
+
+# ==============================
+#   LINUX (grupo ubuntu)
+# ==============================
+- name: "🌐 Ping básico (Linux)"
+  ping:
+  ignore_errors: yes
+  when: "'ubuntu' in group_names"
+
+- name: "🐍 Comprobar Python3 (Linux)"
+  raw: "python3 --version"
+  register: py_check
+  changed_when: false
+  failed_when: false
+  when: "'ubuntu' in group_names"
+  tags: [verificar, python]
+
+- name: "🔧 Instalar Python3 si falta (Linux)"
+  raw: "apt-get update && apt-get install -y python3"
+  args: { warn: false }
+  when:
+    - "'ubuntu' in group_names"
+    - py_check.rc != 0
+  become: true
+  tags: [bootstrap, python]
+
+- name: "👤 Asegurar usuario remoto existe (si no es ubuntu)"
+  user:
+    name: "{{ hostvars[inventory_hostname].ansible_user | default('ubuntu') }}"
+    state: present
+    shell: /bin/bash
+  when: "'ubuntu' in group_names"
+  become: true
+
+- name: "🔒 Asegurar SSH instalado (Linux)"
+  apt:
+    name: openssh-server
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+  when: "'ubuntu' in group_names"
+  become: true
+  tags: [bootstrap, ssh]
+
+- name: "🟢 Asegurar SSH activo (Linux)"
+  service:
+    name: ssh
+    state: started
+    enabled: yes
+  when: "'ubuntu' in group_names"
+  become: true
+  notify: restart ssh
+  tags: [bootstrap, ssh]
+
+- name: "📁 Crear ~/.ssh con permisos correctos (Linux)"
+  file:
+    path: "/home/{{ (hostvars[inventory_hostname].ansible_user | default('ubuntu')) }}/.ssh"
+    state: directory
+    owner: "{{ hostvars[inventory_hostname].ansible_user | default('ubuntu') }}"
+    mode: "0700"
+  when: "'ubuntu' in group_names"
+  become: true
+  tags: [bootstrap, ssh]
+
+- name: "🔑 Copiar clave pública del controller (Linux)"
+  ansible.posix.authorized_key:
+    user: "{{ hostvars[inventory_hostname].ansible_user | default('ubuntu') }}"
+    state: present
+    key: "{{ lookup('file', controller_pubkey_path) }}"
+  when: "'ubuntu' in group_names"
+  become: true
+  tags: [bootstrap, ssh]
+
+# ==============================
+#   WINDOWS (grupo windows)
+# ==============================
+- name: "🖐️ Probar WinRM (Windows)"
+  ansible.windows.win_ping:
+  register: winrm_check
+  ignore_errors: yes
+  when: "'windows' in group_names"
+
+- name: "ℹ️ Aviso si WinRM no responde (Windows)"
+  debug:
+    msg: |
+      ⚠️ WinRM no responde en {{ inventory_hostname }}.
+      Ejecuta en PowerShell (Administrador):
+        winrm quickconfig -q
+        Enable-PSRemoting -Force
+        Set-Item WSMan:\localhost\Service\AllowUnencrypted -Value true
+        Set-Item WSMan:\localhost\Service\Auth\Basic -Value true
+        netsh advfirewall firewall set rule group="Windows Remote Management" new enable=yes
+  when:
+    - "'windows' in group_names"
+    - winrm_check is failed
+
+# ==============================
+#   RESUMEN
+# ==============================
+- name: "✅ RESUMEN"
+  debug:
+    msg: |
+      Host: {{ inventory_hostname }}
+      Grupos: {{ group_names }}
+      IPv4: {{ ansible_all_ipv4_addresses | default([]) }}
+      IPv6: {{ ansible_all_ipv6_addresses | default([]) }}

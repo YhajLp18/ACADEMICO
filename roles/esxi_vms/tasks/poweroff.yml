@@ -1,0 +1,12 @@
+- name: Apagar VM (idempotente)
+  community.vmware.vmware_guest:
+    hostname: "{{ esxi_host }}"
+    port: "{{ esxi_port }}"
+    username: "{{ esxi_user }}"
+    password: "{{ esxi_pass }}"
+    validate_certs: "{{ validate_certs }}"
+    esxi_hostname: "{{ esxi_hostname }}"
+    folder: "{{ folder }}"
+    name: "{{ vm.name }}"
+    state: poweredoff
+  ignore_errors: true

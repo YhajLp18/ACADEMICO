@@ -1,0 +1,25 @@
+- name: Crear/asegurar VM base (CPU/RAM/DISCO)
+  community.vmware.vmware_guest:
+    hostname: "{{ esxi_host }}"
+    port: "{{ esxi_port }}"
+    username: "{{ esxi_user }}"
+    password: "{{ esxi_pass }}"
+    validate_certs: "{{ validate_certs }}"
+    esxi_hostname: "{{ esxi_hostname }}"
+    folder: "{{ folder }}"
+    name: "{{ vm.name }}"
+    state: present
+    guest_id: "{{ vm.guest_id }}"
+    datastore: "{{ datastore }}"
+    hardware:
+      memory_mb: "{{ vm.ram_mb }}"
+      num_cpus: "{{ vm.cpu }}"
+      scsi: paravirtual
+      boot_firmware: "{{ vm.boot_firmware | default(omit) }}"
+      secure_boot: "{{ vm.secure_boot | default(omit) }}"
+    disk:
+      - size_gb: "{{ vm.disk_gb }}"
+        type: thin
+        datastore: "{{ datastore }}"
+    wait_for_ip_address: no
+    state_change_timeout: 180

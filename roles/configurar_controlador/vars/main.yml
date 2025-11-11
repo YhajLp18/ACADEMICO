@@ -1,0 +1,5 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for roles/configurar_controlador
+ansible_user: leon
+ansible_python_interpreter: /usr/bin/python3

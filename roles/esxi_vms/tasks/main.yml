@@ -1,0 +1,40 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for roles/esxi_vms
+- name: Crear/asegurar VMs base
+  include_tasks: create.yml
+  loop: "{{ vms }}"
+  loop_control: { loop_var: vm }
+
+- name: Configurar NICs
+  include_tasks: network.yml
+  loop: "{{ vms }}"
+  loop_control: { loop_var: vm }
+
+- name: Apagar VMs para modificar CD-ROM
+  include_tasks: poweroff.yml
+  loop: "{{ vms }}"
+  loop_control: { loop_var: vm }
+
+- name: Montar ISO via IDE
+  include_tasks: cdrom_ide.yml
+  loop: "{{ vms }}"
+  loop_control: { loop_var: vm }
+  register: cdrom_ide
+
+- name: Montar ISO via SATA si IDE falló
+  include_tasks: cdrom_sata.yml
+  loop: "{{ cdrom_ide.results | zip(vms) | list }}"
+  loop_control:
+    loop_var: pair
+  when: pair.0 is failed or (pair.0.failed | default(false))
+
+- name: Encender VMs
+  include_tasks: poweron.yml
+  loop: "{{ vms }}"
+  loop_control: { loop_var: vm }
+
+- name: Obtener info final
+  include_tasks: info.yml
+  loop: "{{ vms }}"
+  loop_control: { loop_var: vm }

@@ -1,0 +1,36 @@
+---
+# Conexión al ESXi
+esxi_hostname_api: "168.121.48.254"
+esxi_port: 10115          # si tu API está en 443, cambia a 443
+esxi_user: "root"
+esxi_password: "qwe123$"
+validate_certs: false
+
+# Destino del despliegue
+esxi_target_host: "localhost.lim.upeu.edu.pe"   # o la IP del ESXi
+datastore_name: "datastore1"                     # <-- ESTA ES LA QUE FALTABA
+
+# VM
+vm_name: "vm-ansible-demo"
+power_on: true
+disk_provisioning: "thin"
+
+# Redes OVF -> ESXi
+network_mappings:
+  "VM Network": "VM Network"
+
+# Ruta al OVF LIMPIO
+ovf_path: "{{ playbook_dir }}/../files/UBUNTU-SERVER/UBUNTU-LTS.ovf"  # o renómbralo a UBUNTU-LTS.ovf
+deployment_option: ""
+properties: {}
+
+
+# Usuario del controlador (TU usuario real en la VM controller)
+controller_user: ubuntu
+
+# Clave pública del controller que se copiará a los Linux remotos
+controller_pubkey_path: "/home/{{ controller_user }}/.ssh/id_rsa.pub"
+
+# Interprete Python por defecto
+ansible_python_interpreter: /usr/bin/python3
+

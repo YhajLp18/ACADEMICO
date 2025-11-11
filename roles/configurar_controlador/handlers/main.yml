@@ -1,0 +1,7 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for roles/configurar_controlador
+- name: Reiniciar servicio SSH
+  service:
+    name: ssh
+    state: restarted

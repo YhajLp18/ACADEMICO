@@ -1,0 +1,4 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for roles/verificar_requisitos_VMS
+bootstrap_cmd_timeout: 180

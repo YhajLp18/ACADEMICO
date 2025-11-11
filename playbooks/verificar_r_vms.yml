@@ -1,0 +1,11 @@
+---
+# =====================================================
+# 🚀 Bootstrap y verificación de VMs del laboratorio
+# =====================================================
+
+- name: 🧠 Verificación y preparación mínima de todos los nodos
+  hosts: all
+  gather_facts: false
+  become: yes
+  roles:
+    - verificar_requisitos_VMS

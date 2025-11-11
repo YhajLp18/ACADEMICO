@@ -1,0 +1,14 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for roles/esxi_vms
+esxi_host: "172.17.25.121"
+esxi_port: 443
+esxi_user: "root"
+esxi_pass: ""
+esxi_hostname: "172.17.25.121"
+datastore: "datastore1"
+portgroup: "NetworkTest"
+
+vms: []
+validate_certs: false
+folder: "/"

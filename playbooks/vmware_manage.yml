@@ -1,0 +1,58 @@
+---
+# =========================================================
+# 🧰 Gestión del servidor VMware ESXi desde el Controller
+# =========================================================
+
+- name: "🔗 Conectar con VMware ESXi y gestionar VMs"
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    esxi_hostname: "172.17.25.121"
+    esxi_user: "root"
+    esxi_pass: "TuClave"
+    validate_certs: false
+
+  tasks:
+    - name: "📋 Obtener información del host ESXi"
+      community.vmware.vmware_about_info:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+      register: about_info
+
+    - name: "📊 Mostrar versión de ESXi conectada"
+      debug:
+        msg: "Conectado a {{ about_info.about.name }} versión {{ about_info.about.version }}"
+
+    - name: "💾 Listar máquinas virtuales registradas"
+      community.vmware.vmware_vm_info:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+      register: vm_info
+
+    - name: "🧾 Mostrar nombres de las VMs"
+      debug:
+        msg: "{{ item.name }}"
+      loop: "{{ vm_info.virtual_machines }}"
+
+    - name: "▶️ Encender una VM específica (opcional)"
+      community.vmware.vmware_guest_powerstate:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "Ubuntu24-Test"   # cambia por el nombre real de tu VM
+        state: powered-on
+
+    - name: "⏹️ Apagar una VM específica (opcional)"
+      community.vmware.vmware_guest_powerstate:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "Windows10-Test"  # cambia por tu VM real
+        state: powered-off

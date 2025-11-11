@@ -1,0 +1,16 @@
+- name: Info de la VM (CD y NIC)
+  community.vmware.vmware_guest_info:
+    hostname: "{{ esxi_host }}"
+    port: "{{ esxi_port }}"
+    username: "{{ esxi_user }}"
+    password: "{{ esxi_pass }}"
+    validate_certs: "{{ validate_certs }}"
+    name: "{{ vm.name }}"
+  register: vm_info
+
+- name: Resumen
+  debug:
+    msg:
+      - "VM {{ vm.name }}"
+      - "CD/DVD: {{ (vm_info.instance.guest_devices | selectattr('type','equalto','cdrom') | list) | default([]) }}"
+      - "NICs: {{ vm_info.instance.networks | default([]) }}"

@@ -1,0 +1,25 @@
+- hosts: local
+  gather_facts: no
+  collections: [community.vmware]
+  vars:
+    esxi_pass: "{{ esxi_pass }}"  # pásala por -e o Vault
+
+    vms:
+      - name: "ubuntu-24-test"
+        guest_id: "ubuntu64Guest"
+        cpu: 4
+        ram_mb: 8192
+        disk_gb: 60
+        iso_path: "[datastore1] ubuntu-24.04.3-live-server-amd64.iso"
+        boot_firmware: "efi"
+
+      - name: "win11-test"
+        guest_id: "windows11_64Guest"
+        cpu: 4
+        ram_mb: 8192
+        disk_gb: 100
+        iso_path: "[datastore1] Windows11_Vivantic.ISO"
+        boot_firmware: "efi"
+        secure_boot: true   # si tu host lo soporta
+  roles:
+    - esxi_vms
