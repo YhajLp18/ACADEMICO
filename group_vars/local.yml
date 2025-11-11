@@ -8,7 +8,8 @@ validate_certs: false
 
 # Destino del despliegue
 esxi_target_host: "localhost.lim.upeu.edu.pe"   # o la IP del ESXi
-datastore_name: "datastore1"                     # <-- ESTA ES LA QUE FALTABA
+datastore_name: "datastore1"  
+portgroup: "VM Network"                   # <-- ESTA ES LA QUE FALTABA
 
 # VM
 vm_name: "vm-ansible-demo"
