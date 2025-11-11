@@ -9,6 +9,7 @@
     name:
       - python3
       - python3-pip
+      - python3-venv
       - git
       - openssh-client
       - curl
@@ -23,15 +24,45 @@
     name: ansible
     state: present
 
-- name: "🐍 [4/12] Instalando librerías Python necesarias"
-  pip:
-    name:
-      - pyvmomi
-      - pywinrm
-      - requests
-      - jmespath
-      - passlib
-    state: present
+# CAMBIO AQUÍ 👇👇👇
+- name: "🐍 [4/12] Creando entorno virtual para Ansible y librerías Python"
+  block:
+
+    - name: "📁 Crear entorno virtual en /opt/ansible-venv"
+      command: python3 -m venv /opt/ansible-venv
+      args:
+        creates: /opt/ansible-venv/bin/python
+
+    - name: "⬆️ Actualizar pip/setuptools/wheel dentro del venv"
+      pip:
+        name:
+          - pip
+          - setuptools
+          - wheel
+        state: latest
+        virtualenv: /opt/ansible-venv
+        virtualenv_command: python3 -m venv
+
+    - name: "📦 Instalar librerías Python necesarias dentro del venv"
+      pip:
+        name:
+          - pyvmomi
+          - pywinrm
+          - requests
+          - jmespath
+          - passlib
+        state: present
+        virtualenv: /opt/ansible-venv
+        virtualenv_command: python3 -m venv
+
+    - name: "🔒 Asignar permisos correctos al venv"
+      file:
+        path: /opt/ansible-venv
+        state: directory
+        recurse: yes
+        owner: "{{ ansible_user | default('ubuntu') }}"
+        group: "{{ ansible_user | default('ubuntu') }}"
+# CAMBIO AQUÍ ☝️☝️☝️
 
 - name: "📂 [5/12] Creando estructura de carpetas para proyectos Ansible"
   file:
@@ -62,7 +93,7 @@
       roles_path = /home/{{ ansible_user }}/ansible-controller-setup/roles
       host_key_checking = False
       retry_files_enabled = False
-      interpreter_python = auto
+      interpreter_python = /opt/ansible-venv/bin/python
       stdout_callback = yaml
     owner: root
     group: root
