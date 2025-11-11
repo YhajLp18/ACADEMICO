@@ -5,6 +5,14 @@
     controller_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id) | default(controller_user_fallback) }}"
     repo_root: "/home/{{ ansible_env.SUDO_USER | default(ansible_user_id) | default(controller_user_fallback) }}/{{ repo_name }}"
 
+- name: "📁 Crear /etc/ansible si no existe"
+  file:
+    path: /etc/ansible
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
 # ====== 1) Sistema base ======
 - name: "🧱 [1/12] Actualizando repositorios del sistema"
   apt:
