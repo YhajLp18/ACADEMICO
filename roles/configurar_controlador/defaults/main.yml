@@ -1,3 +1,4 @@
-#SPDX-License-Identifier: MIT-0
----
-# defaults file for roles/configurar_controlador
+# Nombre del repo en el controller (carpeta donde clonaste)
+repo_name: "ACADEMICO"
+# Usuario por defecto si no se puede detectar
+controller_user_fallback: "ubuntu"

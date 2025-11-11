@@ -1,4 +1,11 @@
 ---
+# ====== 0) Detectar usuario y rutas base ======
+- name: "🔎 Detectar usuario del controlador"
+  set_fact:
+    controller_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id) | default(controller_user_fallback) }}"
+    repo_root: "/home/{{ ansible_env.SUDO_USER | default(ansible_user_id) | default(controller_user_fallback) }}/{{ repo_name }}"
+
+# ====== 1) Sistema base ======
 - name: "🧱 [1/12] Actualizando repositorios del sistema"
   apt:
     update_cache: yes
@@ -24,73 +31,80 @@
     name: ansible
     state: present
 
-# CAMBIO AQUÍ 👇👇👇
-- name: "🐍 [4/12] Creando entorno virtual para Ansible y librerías Python"
-  block:
+# ====== 2) Virtualenv para evitar PEP 668 ======
+- name: "📁 Crear entorno virtual en /opt/ansible-venv"
+  command: python3 -m venv /opt/ansible-venv
+  args:
+    creates: /opt/ansible-venv/bin/python
 
-    - name: "📁 Crear entorno virtual en /opt/ansible-venv"
-      command: python3 -m venv /opt/ansible-venv
-      args:
-        creates: /opt/ansible-venv/bin/python
+- name: "⬆️ Actualizar pip/setuptools/wheel dentro del venv"
+  pip:
+    name:
+      - pip
+      - setuptools
+      - wheel
+    state: latest
+    virtualenv: /opt/ansible-venv
+    virtualenv_command: python3 -m venv
 
-    - name: "⬆️ Actualizar pip/setuptools/wheel dentro del venv"
-      pip:
-        name:
-          - pip
-          - setuptools
-          - wheel
-        state: latest
-        virtualenv: /opt/ansible-venv
-        virtualenv_command: python3 -m venv
+- name: "📦 [4/12] Instalar librerías Python necesarias dentro del venv"
+  pip:
+    name:
+      - pyvmomi
+      - pywinrm
+      - requests
+      - jmespath
+      - passlib
+    state: present
+    virtualenv: /opt/ansible-venv
+    virtualenv_command: python3 -m venv
 
-    - name: "📦 Instalar librerías Python necesarias dentro del venv"
-      pip:
-        name:
-          - pyvmomi
-          - pywinrm
-          - requests
-          - jmespath
-          - passlib
-        state: present
-        virtualenv: /opt/ansible-venv
-        virtualenv_command: python3 -m venv
-
-    - name: "🔒 Asignar permisos correctos al venv"
-      file:
-        path: /opt/ansible-venv
-        state: directory
-        recurse: yes
-        owner: "{{ ansible_user | default('ubuntu') }}"
-        group: "{{ ansible_user | default('ubuntu') }}"
-# CAMBIO AQUÍ ☝️☝️☝️
-
-- name: "📂 [5/12] Creando estructura de carpetas para proyectos Ansible"
+# (opcional) Si quieres que el venv pertenezca al usuario no-root
+- name: "🔒 Asignar permisos correctos al venv"
   file:
-    path: "/home/{{ ansible_user }}/ansible-proyectos"
+    path: /opt/ansible-venv
     state: directory
-    mode: '0755'
-    owner: "{{ ansible_user }}"
+    recurse: yes
+    owner: "{{ controller_user }}"
+    group: "{{ controller_user }}"
 
-- name: "🔑 [6/12] Generando par de claves SSH (para conexión con otros hosts)"
+# ====== 3) SSH y estructura ======
+- name: "📁 Crear carpeta .ssh si no existe"
+  file:
+    path: "/home/{{ controller_user }}/.ssh"
+    state: directory
+    mode: '0700'
+    owner: "{{ controller_user }}"
+    group: "{{ controller_user }}"
+
+- name: "🔑 [5/12] Generar par de claves SSH (si no existe)"
   openssh_keypair:
-    path: "/home/{{ ansible_user }}/.ssh/id_rsa"
+    path: "/home/{{ controller_user }}/.ssh/id_rsa"
     type: rsa
     size: 2048
-    owner: "{{ ansible_user }}"
+    owner: "{{ controller_user }}"
     mode: '0600'
   register: ssh_key
 
-- name: "📜 [7/12] Mostrando clave pública generada"
-  debug:
-    msg: "{{ lookup('file', '/home/' + ansible_user + '/.ssh/id_rsa.pub') }}"
+- name: "📂 [6/12] Crear carpeta para proyectos Ansible"
+  file:
+    path: "/home/{{ controller_user }}/ansible-proyectos"
+    state: directory
+    mode: '0755'
+    owner: "{{ controller_user }}"
 
-- name: "⚙️ [8/12] Configurando ansible.cfg global"
+- name: "📜 [7/12] Mostrar clave pública generada"
+  debug:
+    msg: "{{ lookup('file', '/home/' + controller_user + '/.ssh/id_rsa.pub') }}"
+
+# ====== 4) ansible.cfg apuntando a TU repo ======
+- name: "⚙️ [8/12] Configurar /etc/ansible/ansible.cfg"
   copy:
     dest: /etc/ansible/ansible.cfg
     content: |
       [defaults]
-      inventory = /home/{{ ansible_user }}/ansible-controller-setup/inventories/hosts.ini
-      roles_path = /home/{{ ansible_user }}/ansible-controller-setup/roles
+      inventory = {{ repo_root }}/inventories/hosts.ini
+      roles_path = {{ repo_root }}/roles
       host_key_checking = False
       retry_files_enabled = False
       interpreter_python = /opt/ansible-venv/bin/python
@@ -99,17 +113,19 @@
     group: root
     mode: '0644'
 
-- name: "📦 [9/12] Instalando colección community.vmware desde Galaxy"
+# ====== 5) Colecciones ======
+- name: "📦 [9/12] Instalar colección community.vmware desde Galaxy"
   ansible.builtin.command: ansible-galaxy collection install community.vmware
   register: vmware_install
   changed_when: "'Successfully installed' in vmware_install.stdout or 'already installed' in vmware_install.stdout"
 
-- name: "📊 [10/12] Verificando instalación de Ansible"
+# ====== 6) Verificación ======
+- name: "📊 [10/12] Verificar instalación de Ansible"
   command: ansible --version
   register: ansible_version
   changed_when: false
 
-- name: "📊 [11/12] Verificando instalación de community.vmware"
+- name: "📊 [11/12] Verificar colecciones de Ansible Galaxy"
   command: ansible-galaxy collection list
   register: collections_list
   changed_when: false
@@ -120,12 +136,12 @@
       ═══════════════════════════════════════════════════════
       ✅ Instalación completa del controlador Ansible
       ═══════════════════════════════════════════════════════
-      🧠 Versión de Ansible instalada:
+      👤 Usuario controlador: {{ controller_user }}
+      📂 Repo raíz configurado: {{ repo_root }}
+      🧠 Versión de Ansible:
       {{ ansible_version.stdout }}
-      🧱 Colecciones disponibles:
+      🧱 Colecciones (vmware):
       {{ collections_list.stdout | regex_search('community.vmware[^\n]*', multiline=True) }}
-      ───────────────────────────────────────────────────────
-      🎯 Controlador listo para usar con Linux, Windows y VMware
-      🗝️ Clave pública SSH disponible en:
-      /home/{{ ansible_user }}/.ssh/id_rsa.pub
+      🗝️ Clave pública SSH:
+      /home/{{ controller_user }}/.ssh/id_rsa.pub
       ═══════════════════════════════════════════════════════
