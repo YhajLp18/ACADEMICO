@@ -1,4 +1,5 @@
 - name: restart dhcpv6
-  service:
+  systemd:
     name: isc-dhcp-server6
     state: restarted
+    enabled: yes

@@ -12,13 +12,14 @@
     group: root
     mode: "0644"
 
-- name: "⚙️ Configurar /etc/default/isc-dhcp-server"
+- name: "⚙️ Configurar /etc/default/isc-dhcp-server con la NIC IPv6 LAN"
   template:
     src: isc-dhcp-server.j2
     dest: /etc/default/isc-dhcp-server
     owner: root
     group: root
     mode: "0644"
+  notify: restart dhcpv6
 
 - name: "🔥 Permitir puertos UDP 546 y 547"
   ufw:
