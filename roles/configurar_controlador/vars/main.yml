@@ -3,3 +3,7 @@
 # vars file for roles/configurar_controlador
 ansible_user: leon
 ansible_python_interpreter: /usr/bin/python3
+
+repo_name: ACADEMICO
+repo_url: "https://github.com/YhajLp18/ACADEMICO"
+repo_branch: main
