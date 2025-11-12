@@ -1,0 +1,4 @@
+- name: restart dhcpv6
+  service:
+    name: isc-dhcp-server6
+    state: restarted

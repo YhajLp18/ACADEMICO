@@ -1,0 +1,26 @@
+# DHCPv6 básico para red interna
+authoritative;
+
+# DDNS opcional
+{% if enable_ddns %}
+ddns-update-style interim;
+update-static-leases on;
+
+key {{ ddns_key_name }} {
+  algorithm hmac-md5;
+  secret "{{ ddns_key_secret }}";
+}
+
+zone {{ ddns_zone }}. {
+  primary {{ (dns_servers | first) }};
+  key {{ ddns_key_name }};
+}
+{% endif %}
+
+subnet6 {{ ipv6_prefix }} {
+  range6 {{ pool_start }} {{ pool_end }};
+  option dhcp6.name-servers {% for s in dns_servers %}{{ s }}{% if not loop.last %}, {% endif %}{% endfor %};
+  {% if domain_search %}option dhcp6.domain-search "{{ domain_search }}";{% endif %}
+  default-lease-time {{ default_lease_time }};
+  preferred-lifetime {{ preferred_lifetime }};
+}

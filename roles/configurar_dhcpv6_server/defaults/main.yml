@@ -1,0 +1,29 @@
+# Interfaz LAN por donde sirven los leases v6
+iface_lan: "enp0s8"
+
+# Prefijo interno /64
+ipv6_prefix: "2025:db8:20::/64"
+
+# (Opcional) IPv6 del controlador en esa LAN (no la uso en dhcpd6, solo referencia)
+controller_ipv6: "2025:db8:20::1"
+
+# Rango de asignación
+pool_start: "2025:db8:20::100"
+pool_end:   "2025:db8:20::200"
+
+# DNS para entregar a clientes (por defecto, el propio controlador)
+dns_servers:
+  - "{{ controller_ipv6 }}"
+
+# Dominio de búsqueda opcional
+domain_search: "lab.local"
+
+# Tiempos
+default_lease_time: 1800
+preferred_lifetime: 900
+
+# DDNS (apagado por defecto)
+enable_ddns: false
+ddns_key_name: "DDNS_UPDATE"
+ddns_key_secret: "CAMBIA_ESTA_CLAVE_BASE64=="
+ddns_zone: "lab.local"
