@@ -1,5 +1,5 @@
 # Interfaz LAN por donde sirven los leases v6
-iface_lan: "enp0s8"
+iface_lan: "ens37"
 
 # Prefijo interno /64
 ipv6_prefix: "2025:db8:20::/64"
