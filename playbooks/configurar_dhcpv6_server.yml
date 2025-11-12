@@ -1,0 +1,27 @@
+---
+- name: Configurar DHCPv6 en el controlador
+  hosts: controller
+  become: yes
+  roles:
+    - role: configurar_dhcpv6_server
+      vars:
+        iface_lan: "enp0s8"                 # cambia a tu NIC LAN real
+        ipv6_prefix: "2025:db8:20::/64"
+        controllpv6: "2025:db8:20::1"
+        pool_start: "2025:db8:20::100"
+        pool_end:   "2025:db8:20::200"
+        dns_servers: ["2025:db8:20::1"]     # o el DNS que prefieras
+        domain_search: "lab.local"
+        enable_ddns: false                  # déjalo en false si no usarás DDNS
+  
+  post_tasks:
+   - name: "✅ CONFIGURACIÓN FINALIZADA CON ÉXITO"
+     debug:
+       msg: |
+          🎯 El nodo controlador ya está listo.
+          ────────────────────────────────────────
+          Usa:
+              ansible --version
+              ansible-inventory --list
+              ansible all -m ping
+          para probar la instalación.
