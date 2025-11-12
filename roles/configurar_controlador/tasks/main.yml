@@ -1,4 +1,15 @@
----
+# ====== 0.1) Defaults / fallbacks seguros (antes de usar controller_user_fallback) ======
+- name: "🧭 Definir fallback de usuario si no viene por sudo"
+  set_fact:
+    controller_user_fallback: "{{ lookup('env','USER') | default('ubuntu', true) }}"
+  when: controller_user_fallback is not defined
+
+# Requiere repo_name: asegúrate de pasarlo por vars_files o -e
+- name: "🛑 Validar que repo_name esté definido"
+  assert:
+    that: repo_name is defined
+    fail_msg: "Debe definir 'repo_name' (nombre de tu repo) para construir repo_root."
+
 # ====== 0) Detectar usuario y rutas base ======
 - name: "🔎 Detectar usuario del controlador"
   set_fact:
@@ -127,6 +138,26 @@
   register: vmware_install
   changed_when: "'Successfully installed' in vmware_install.stdout or 'already installed' in vmware_install.stdout"
 
+# ====== 3.1) Garantizar carpeta del repo para clonar (después de conocer repo_root) ======
+- name: "📂 Crear carpeta destino del repo (si no existe)"
+  file:
+    path: "{{ repo_root }}"
+    state: directory
+    owner: "{{ controller_user }}"
+    group: "{{ controller_user }}"
+    mode: '0755'
+
+# ====== 3.2) (Opcional) Clonar tu repo si pasas repo_url ======
+- name: "⬇️ Clonar repo (opcional)"
+  git:
+    repo: "{{ repo_url }}"
+    dest: "{{ repo_root }}"
+    version: "{{ repo_branch | default('main') }}"
+    accept_hostkey: yes
+    update: yes
+  when: repo_url is defined
+  become_user: "{{ controller_user }}"
+
 # ====== 6) Verificación ======
 - name: "📊 [10/12] Verificar instalación de Ansible"
   command: ansible --version
@@ -153,3 +184,26 @@
       🗝️ Clave pública SSH:
       /home/{{ controller_user }}/.ssh/id_rsa.pub
       ═══════════════════════════════════════════════════════
+
+# ====== 6.1) Mensaje de próximos pasos (útil en consola) ======
+- name: "➡️ Siguiente paso"
+  debug:
+    msg: |
+      ✅ Controlador listo.
+      1) Configura IPv6 fija en la NIC LAN (una sola vez):
+         sudo tee /etc/netplan/60-lan-ipv6.yaml <<EOF
+         network:
+           version: 2
+           ethernets:
+             enp0s8:
+               addresses: [ "2025:db8:20::1/64" ]
+               dhcp6: no
+         EOF
+         sudo netplan apply
+
+      2) Si no clonaste automático:
+         git clone <TU_REPO> {{ repo_root }}
+
+      3) Ejecuta:
+         cd {{ repo_root }}
+         ansible-playbook -i inventories/hosts.ini site.yml
