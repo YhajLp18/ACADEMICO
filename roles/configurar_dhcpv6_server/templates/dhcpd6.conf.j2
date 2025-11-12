@@ -24,3 +24,12 @@ subnet6 {{ ipv6_prefix }} {
   default-lease-time {{ default_lease_time }};
   preferred-lifetime {{ preferred_lifetime }};
 }
+default-lease-time 3600;
+preferred-lifetime 1800;
+option dhcp6.info-refresh-time 21600;
+
+subnet6 {{ ipv6_prefix }} {
+  range6 {{ pool_start }} {{ pool_end }};
+  option dhcp6.name-servers {{ dns_servers | join(", ") }};
+  option dhcp6.domain-search "{{ domain_search }}";
+}

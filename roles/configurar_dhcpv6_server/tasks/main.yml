@@ -1,33 +1,36 @@
-- name: Instalar servidor DHCPv6
+- name: "🧱 Instalar DHCPv6"
   apt:
     name: isc-dhcp-server
     state: present
     update_cache: yes
 
-- name: Asegurar daemon use la interfaz IPv6 LAN
-  lineinfile:
-    path: /etc/default/isc-dhcp-server
-    regexp: '^INTERFACESv6='
-    line: 'INTERFACESv6="{{ iface_lan }}"'
-    create: yes
-
-- name: Plantilla dhcpd6.conf
+- name: "📜 Configurar archivo /etc/dhcp/dhcpd6.conf"
   template:
     src: dhcpd6.conf.j2
     dest: /etc/dhcp/dhcpd6.conf
-    mode: '0644'
-  notify: restart dhcpv6
+    owner: root
+    group: root
+    mode: "0644"
 
-# (Opcional) abrir puertos si usas UFW. No falla si no está.
-- name: Permitir DHCPv6 en UFW (puertos 546/547 UDP)
-  command: "{{ item }}"
+- name: "⚙️ Configurar /etc/default/isc-dhcp-server"
+  template:
+    src: isc-dhcp-server.j2
+    dest: /etc/default/isc-dhcp-server
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: "🔥 Permitir puertos UDP 546 y 547"
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: udp
   loop:
-    - ufw allow 546/udp
-    - ufw allow 547/udp
-  ignore_errors: yes
+    - 546
+    - 547
 
-- name: Habilitar y arrancar isc-dhcp-server6
+- name: "🚀 Habilitar y arrancar DHCPv6"
   systemd:
     name: isc-dhcp-server6
-    state: started
     enabled: yes
+    state: restarted

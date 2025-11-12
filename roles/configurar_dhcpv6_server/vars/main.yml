@@ -1,3 +1,7 @@
-#SPDX-License-Identifier: MIT-0
----
-# vars file for configurar_dhcpv6_server
+iface_lan: ens37
+ipv6_prefix: "2025:db8:20::/64"
+pool_start: "2025:db8:20::100"
+pool_end: "2025:db8:20::200"
+dns_servers:
+  - "2025:db8:20::1"
+domain_search: "lab.local"
