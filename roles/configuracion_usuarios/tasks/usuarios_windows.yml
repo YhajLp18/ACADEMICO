@@ -1,0 +1,27 @@
+---
+- name: "👤 Crear usuarios en Windows"
+  ansible.windows.win_user:
+    name: "{{ item.0 }}"
+    password: "{{ item.1 }}"
+    state: present
+    password_never_expires: "{{ users_password_expire }}"
+  loop: "{{ users_to_create | zip(users_passwords) | list }}"
+  when: users_to_create is defined
+
+- name: "🔐 Agregar usuarios a grupo Windows"
+  ansible.windows.win_group_membership:
+    name: "{{ windows_group_map[user_role] }}"
+    members: "{{ users_to_create }}"
+    state: present
+  when: users_to_create is defined and user_role is defined
+
+- name: "✅ Confirmación en Windows"
+  debug:
+    msg: |
+      
+      ✓ Máquina: {{ inventory_hostname }}
+      ✓ SO: {{ ansible_os_family }}
+      ✓ Usuarios creados: {{ users_to_create | join(', ') }}
+      ✓ Rol: {{ user_role }}
+      ✓ Grupo: {{ windows_group_map[user_role] }}
+  when: users_to_create is defined

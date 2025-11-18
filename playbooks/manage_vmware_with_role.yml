@@ -1,0 +1,23 @@
+---
+- name: "🖥️ Gestión de máquinas virtuales con roles"
+  hosts: localhost
+  gather_facts: false
+
+  vars_prompt:
+    - name: vm_action
+      prompt: |
+        
+        🖥️  ¿Qué acción deseas realizar?
+        
+        1) Encender VM
+        2) Apagar VM
+        3) Reiniciar VM
+        4) Listar todas las VMs
+        
+        Selecciona (1-4)
+      private: false
+
+  roles:
+    - role: vmware_management
+      vars:
+        vm_action: "{{ vm_action }}"

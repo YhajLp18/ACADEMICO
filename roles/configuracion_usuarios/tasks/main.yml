@@ -1,0 +1,18 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for roles/users_linux
+
+- name: "👥 Crear usuarios según el SO"
+  block:
+    - name: "🐧 Crear usuarios en Linux"
+      include_tasks: usuarios_linux.yml
+      when: ansible_os_family == "Debian"
+
+    - name: "🪟 Crear usuarios en Windows"
+      include_tasks: usuarios_windows.yml
+      when: ansible_os_family == "Windows"
+
+    - name: "⚠️ SO no soportado"
+      debug:
+        msg: "⚠️ Sistema operativo no soportado: {{ ansible_os_family }}"
+      when: ansible_os_family not in ['Debian', 'Windows']

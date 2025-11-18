@@ -1,0 +1,20 @@
+#SPDX-License-Identifier: MIT-0
+---
+# Valores por defecto para la configuración de usuarios
+users_default_shell: "/bin/bash"
+users_default_createhome: true
+users_password_expire: false
+
+# Mapeo de roles a grupos
+role_group_map:
+  alumno: "students"
+  profesor: "professors"
+  administrador: "sudo"
+  tecnico: "sudo"
+
+# Mapeo para Windows
+windows_group_map:
+  alumno: "Users"
+  profesor: "Users"
+  administrador: "Administrators"
+  tecnico: "Administrators"

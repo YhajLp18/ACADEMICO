@@ -1,0 +1,166 @@
+---
+# =========================================================
+# PLAY 1: Recopilar datos en localhost
+# =========================================================
+- name: "👥 Crear usuarios para entorno académico - Paso 1: Recopilar datos"
+  hosts: localhost
+  gather_facts: false
+
+  vars_prompt:
+    - name: user_role
+      prompt: |
+        
+        👨‍🎓 ¿Qué tipo de usuario vas a crear?
+        
+        1) Alumno
+        2) Profesor
+        3) Administrador
+        4) Técnico de soporte
+        
+        Selecciona (1-4)
+      private: false
+
+    - name: num_users
+      prompt: |
+        
+        📝 ¿Cuántos usuarios deseas crear?
+      private: false
+
+    - name: target_machines
+      prompt: |
+        
+        ❓ ¿En qué máquinas crear los usuarios?
+        
+        1) Ubuntu Desktop
+        2) Windows 11
+        3) Ubuntu Server
+        4) Windows Server
+        5) Todas
+        
+        Selecciona (1-5)
+      private: false
+
+  tasks:
+    - name: "🔄 Mapear rol de usuario"
+      set_fact:
+        role_selected: "{{ role_map[user_role] }}"
+        num_users_int: "{{ num_users | int }}"
+        machine_group: "{{ machine_map[target_machines] }}"
+      vars:
+        role_map:
+          "1": "alumno"
+          "2": "profesor"
+          "3": "administrador"
+          "4": "tecnico"
+        machine_map:
+          "1": "ubuntu_desktop"
+          "2": "windows_11"
+          "3": "ubuntu_server"
+          "4": "windows_server"
+          "5": "all"
+
+    - name: "📝 Inicializar listas"
+      set_fact:
+        users_list: []
+        passwords_list: []
+
+    - name: "📋 Obtener información de cada usuario"
+      pause:
+        prompt: "Usuario #{{ item }}\nNombre del usuario (ej: alumno001)"
+      register: user_info_result
+      loop: "{{ range(1, num_users_int + 1) | list }}"
+
+    - name: "🔐 Construir lista de usuarios"
+      set_fact:
+        users_list: "{{ user_info_result.results | map(attribute='user_input') | list }}"
+
+    - name: "🔐 Obtener contraseña para cada usuario"
+      pause:
+        prompt: "Contraseña para {{ item }}"
+        echo: false
+      register: pass_result
+      loop: "{{ users_list }}"
+
+    - name: "🔐 Construir lista de contraseñas"
+      set_fact:
+        passwords_list: "{{ pass_result.results | map(attribute='user_input') | list }}"
+
+    - name: "✅ Mostrar resumen"
+      debug:
+        msg: |
+          
+          ===== RESUMEN =====
+          Rol: {{ role_selected }}
+          Cantidad: {{ num_users_int }}
+          Usuarios: {{ users_list | join(', ') }}
+          Destino: {{ machine_group }}
+
+
+# =========================================================
+# PLAY 2: Crear grupos dinámicos con add_host
+# =========================================================
+- name: "🎯 Crear grupos dinámicos de máquinas destino"
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: "📌 Preparar hosts para Ubuntu Desktop"
+      add_host:
+        name: "{{ inventory_hostname }}"
+        groups: "target_machines"
+      when: 
+        - inventory_hostname in groups.get('ubuntu_desktop', [])
+        - hostvars['localhost'].machine_group in ['ubuntu_desktop', 'all']
+
+    - name: "📌 Preparar hosts para Windows 11"
+      add_host:
+        name: "{{ inventory_hostname }}"
+        groups: "target_machines"
+      when:
+        - inventory_hostname in groups.get('windows_11', [])
+        - hostvars['localhost'].machine_group in ['windows_11', 'all']
+
+    - name: "📌 Preparar hosts para Ubuntu Server"
+      add_host:
+        name: "{{ inventory_hostname }}"
+        groups: "target_machines"
+      when:
+        - inventory_hostname in groups.get('ubuntu_server', [])
+        - hostvars['localhost'].machine_group in ['ubuntu_server', 'all']
+
+    - name: "📌 Preparar hosts para Windows Server"
+      add_host:
+        name: "{{ inventory_hostname }}"
+        groups: "target_machines"
+      when:
+        - inventory_hostname in groups.get('windows_server', [])
+        - hostvars['localhost'].machine_group in ['windows_server', 'all']
+
+- name: "✅ Verificar hosts agregados"
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: "📋 Mostrar grupo dinámico creado"
+      debug:
+        msg: |
+          
+          ✓ Grupo dinámico 'target_machines' creado
+          ✓ Hosts: {{ groups.get('target_machines', []) | join(', ') }}
+          ✓ Total: {{ groups.get('target_machines', []) | length }} máquinas
+
+# =========================================================
+# PLAY 3: Crear usuarios usando el rol
+# =========================================================
+- name: "🎯 Aplicar creación de usuarios con rol configuracion_usuarios"
+  hosts: target_machines
+  gather_facts: true
+  serial: 1
+
+  vars:
+    user_role: "{{ hostvars['localhost'].role_selected }}"
+    users_to_create: "{{ hostvars['localhost'].users_list }}"
+    users_passwords: "{{ hostvars['localhost'].passwords_list }}"
+
+  roles:
+    - role: configuracion_usuarios

@@ -1,0 +1,142 @@
+---
+- name: "🎓 Gestión Completa del Entorno Académico"
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    esxi_hostname: "172.17.25.121"
+    esxi_user: "root"
+    esxi_pass: "TuClave"
+    validate_certs: false
+
+  vars_prompt:
+    - name: environment_action
+      prompt: |
+        
+        🎓 === GESTIÓN DE ENTORNO ACADÉMICO ===
+        
+        1) Crear entorno completo (VMs + Usuarios)
+        2) Solo gestionar máquinas virtuales
+        3) Solo crear/gestionar usuarios
+        4) Ver estado de VMs y máquinas
+        
+        Selecciona una opción (1-4)
+      private: false
+
+  tasks:
+    - name: "🔄 Mapear acción seleccionada"
+      set_fact:
+        action_selected: "{{ action_map[environment_action] }}"
+      vars:
+        action_map:
+          "1": "full_setup"
+          "2": "vms_only"
+          "3": "users_only"
+          "4": "status_check"
+
+    - name: "✅ Mostrar acción seleccionada"
+      debug:
+        msg: "Acción seleccionada: {{ action_selected }}"
+
+    # ============================================
+    # OPCIÓN 1: SETUP COMPLETO
+    # ============================================
+    - name: "🎓 Iniciar setup completo del entorno"
+      block:
+        - name: "📋 Conectar con ESXi y obtener VMs"
+          community.vmware.vmware_vm_info:
+            hostname: "{{ esxi_hostname }}"
+            username: "{{ esxi_user }}"
+            password: "{{ esxi_pass }}"
+            validate_certs: "{{ validate_certs }}"
+          register: vm_list
+
+        - name: "🖥️ Mostrar máquinas virtuales disponibles"
+          debug:
+            msg: |
+              
+              Máquinas virtuales encontradas:
+              {% for vm in vm_list.virtual_machines %}
+              - {{ vm.name }}
+              {% endfor %}
+
+        - name: "❓ ¿Encender las VMs necesarias?"
+          pause:
+            prompt: |
+              
+              ¿Deseas encender las máquinas virtuales?
+              (s/n)
+          register: power_vms
+
+        - name: "⚡ Encender VMs seleccionadas"
+          community.vmware.vmware_guest_powerstate:
+            hostname: "{{ esxi_hostname }}"
+            username: "{{ esxi_user }}"
+            password: "{{ esxi_pass }}"
+            validate_certs: "{{ validate_certs }}"
+            name: "{{ item.name }}"
+            state: powered-on
+          loop: "{{ vm_list.virtual_machines }}"
+          when: power_vms.user_input | lower == 's'
+
+        - name: "⏳ Esperar a que arranquen las máquinas"
+          pause:
+            seconds: 15
+            prompt: "⏳ Esperando a que arranquen las máquinas..."
+          when: power_vms.user_input | lower == 's'
+
+        - name: "👥 Proceder con creación de usuarios"
+          include_tasks: create_academic_users.yml
+
+      when: action_selected == "full_setup"
+
+    # ============================================
+    # OPCIÓN 2: SOLO GESTIÓN DE VMs
+    # ============================================
+    - name: "🖥️ Gestión de máquinas virtuales"
+      include_tasks: manage_vmware_vms.yml
+      when: action_selected == "vms_only"
+
+    # ============================================
+    # OPCIÓN 3: SOLO GESTIÓN DE USUARIOS
+    # ============================================
+    - name: "👥 Gestión de usuarios"
+      include_tasks: create_academic_users.yml
+      when: action_selected == "users_only"
+
+    # ============================================
+    # OPCIÓN 4: VER ESTADO
+    # ============================================
+    - name: "📊 Verificar estado del entorno"
+      block:
+        - name: "📋 Obtener info de ESXi"
+          community.vmware.vmware_about_info:
+            hostname: "{{ esxi_hostname }}"
+            username: "{{ esxi_user }}"
+            password: "{{ esxi_pass }}"
+            validate_certs: "{{ validate_certs }}"
+          register: esxi_info
+
+        - name: "💾 Listar VMs"
+          community.vmware.vmware_vm_info:
+            hostname: "{{ esxi_hostname }}"
+            username: "{{ esxi_user }}"
+            password: "{{ esxi_pass }}"
+            validate_certs: "{{ validate_certs }}"
+          register: vms_status
+
+        - name: "📊 Mostrar estado completo"
+          debug:
+            msg: |
+              
+              ===== ESTADO DEL ENTORNO ACADÉMICO =====
+              
+              🖥️  ESXi: {{ esxi_info.about.name }}
+              📌 Versión: {{ esxi_info.about.version }}
+              
+              💾 Máquinas Virtuales:
+              {% for vm in vms_status.virtual_machines %}
+              - {{ vm.name }} ({{ vm.power_state }})
+              {% endfor %}
+
+      when: action_selected == "status_check"

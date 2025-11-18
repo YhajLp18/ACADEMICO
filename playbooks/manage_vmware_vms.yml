@@ -1,0 +1,84 @@
+---
+- name: "🖥️ Gestión de máquinas virtuales"
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    esxi_hostname: "172.17.25.121"
+    esxi_user: "root"
+    esxi_pass: "TuClave"
+    validate_certs: false
+
+  vars_prompt:
+    - name: vm_action
+      prompt: |
+        
+        🖥️  ¿Qué acción deseas realizar?
+        
+        1) Encender VM
+        2) Apagar VM
+        3) Reiniciar VM
+        4) Listar todas las VMs
+        
+        Selecciona (1-4)
+      private: false
+
+  tasks:
+    - name: "📋 Listar todas las máquinas virtuales"
+      community.vmware.vmware_vm_info:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+      register: all_vms
+
+    - name: "🖥️ Mostrar VMs disponibles"
+      debug:
+        msg: |
+          
+          Máquinas virtuales disponibles:
+          {% for vm in all_vms.virtual_machines %}
+          - {{ vm.name }} ({{ vm.power_state }})
+          {% endfor %}
+
+    - name: "❓ Seleccionar VM"
+      pause:
+        prompt: |
+          
+          Ingresa el nombre exacto de la VM
+      register: vm_selected
+      when: vm_action != "4"
+
+    - name: "⚡ Encender VM"
+      community.vmware.vmware_guest_powerstate:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "{{ vm_selected.user_input }}"
+        state: powered-on
+      when: vm_action == "1"
+
+    - name: "⏹️ Apagar VM"
+      community.vmware.vmware_guest_powerstate:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "{{ vm_selected.user_input }}"
+        state: powered-off
+      when: vm_action == "2"
+
+    - name: "🔄 Reiniciar VM"
+      community.vmware.vmware_guest_powerstate:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_user }}"
+        password: "{{ esxi_pass }}"
+        validate_certs: "{{ validate_certs }}"
+        name: "{{ vm_selected.user_input }}"
+        state: restarted
+      when: vm_action == "3"
+
+    - name: "✅ Acción completada"
+      debug:
+        msg: "Acción realizada en {{ vm_selected.user_input | default('todas las VMs') }}"

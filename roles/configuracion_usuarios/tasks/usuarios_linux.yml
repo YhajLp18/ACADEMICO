@@ -1,0 +1,29 @@
+---
+- name: "🔐 Crear grupo específico en Linux"
+  ansible.builtin.group:
+    name: "{{ role_group_map[user_role] }}"
+    state: present
+  when: user_role is defined
+
+- name: "👤 Crear usuarios en Linux"
+  ansible.builtin.user:
+    name: "{{ item.0 }}"
+    password: "{{ item.1 | password_hash('sha512') }}"
+    shell: "{{ users_default_shell }}"
+    state: present
+    createhome: "{{ users_default_createhome }}"
+    groups: "{{ role_group_map[user_role] }}"
+    append: yes
+  loop: "{{ users_to_create | zip(users_passwords) | list }}"
+  when: users_to_create is defined
+
+- name: "✅ Confirmación en Linux"
+  debug:
+    msg: |
+      
+      ✓ Máquina: {{ inventory_hostname }}
+      ✓ SO: {{ ansible_os_family }}
+      ✓ Usuarios creados: {{ users_to_create | join(', ') }}
+      ✓ Rol: {{ user_role }}
+      ✓ Grupo: {{ role_group_map[user_role] }}
+  when: users_to_create is defined

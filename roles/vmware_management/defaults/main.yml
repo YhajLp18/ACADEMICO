@@ -1,0 +1,5 @@
+---
+esxi_hostname: "172.17.25.121"
+esxi_user: "root"
+esxi_pass: "TuClave"
+validate_certs: false
