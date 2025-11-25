@@ -1,0 +1,13 @@
+---
+- name: Listar maquinas gestionadas por Ansible
+  hosts: todos
+  gather_facts: yes
+
+  tasks:
+    - name: Mostrar info basica de cada maquina
+      ansible.builtin.debug:
+        msg:
+          - "Nombre Ansible: {{ inventory_hostname }}"
+          - "Hostname SO: {{ ansible_hostname }}"
+          - "IP principal: {{ ansible_default_ipv4.address | default('sin IPv4') }}"
+          - "Descripcion: {{ descripcion | default('Sin descripcion definida') }}"

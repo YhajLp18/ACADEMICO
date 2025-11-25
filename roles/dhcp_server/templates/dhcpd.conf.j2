@@ -1,0 +1,8 @@
+# Configuración del servidor ISC DHCP para IPv4
+subnet 192.168.20.0 netmask 255.255.255.0 {
+  range 192.168.20.10 192.168.20.100;  # Rango de IPs asignables
+  option routers 192.168.20.1;  # Dirección del router
+  option domain-name-servers 8.8.8.8, 8.8.4.4;  # Servidores DNS
+  option broadcast-address 192.168.20.255;
+}
+

@@ -1,0 +1,8 @@
+# Configuración para IPv6 con radvd
+interface eth0 {
+    AdvSendAdvert on;
+    prefix 2025:db8:acad:20::/64 {
+        AdvOnLink on;
+        AdvAutonomous on;
+    };
+};

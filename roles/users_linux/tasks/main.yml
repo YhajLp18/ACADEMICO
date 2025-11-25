@@ -1,0 +1,17 @@
+---
+- name: Asegurar que los grupos existen (opcional)
+  ansible.builtin.group:
+    name: "{{ item.groups | default(omit) }}"
+    state: present
+  loop: "{{ users_to_manage }}"
+  when: item.groups is defined
+
+- name: Gestionar usuarios en Ubuntu
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    comment: "{{ item.comment | default('Usuario gestionado por Ansible') }}"
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    groups: "{{ item.groups | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
+    create_home: yes
+  loop: "{{ users_to_manage }}"

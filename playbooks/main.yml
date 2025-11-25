@@ -1,0 +1,24 @@
+---
+- name: Configurar red y DHCPv6 en Ubuntu Server
+  hosts: dhcpv6_server
+  become: true
+
+  vars:
+    # Interfaces del Ubuntu Server
+    wan_interface: "enp0s3"             # NAT
+    lan_interface: "enp0s8"             # Host-Only (red con Windows/Ubuntu Desktop)
+
+    # Red IPv6 interna
+    ipv6_prefix: "2001:db8:10::/64"
+    ipv6_server_addr: "2001:db8:10::1/64"
+
+    # Rango DHCPv6
+    dhcpv6_range_start: "2001:db8:10::100"
+    dhcpv6_range_end: "2001:db8:10::200"
+
+    # DNS IPv6 (usamos el mismo server)
+    dhcpv6_dns: "2001:db8:10::1"
+
+  roles:
+    - config_netplan_ipv6
+    - conf_dhcpv6+rad

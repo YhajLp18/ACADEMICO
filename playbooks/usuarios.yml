@@ -1,0 +1,7 @@
+---
+- name: Administrar usuarios en maquinas Ubuntu
+  hosts: ubuntu_vms
+  become: yes
+
+  roles:
+    - ../roles/users_linux

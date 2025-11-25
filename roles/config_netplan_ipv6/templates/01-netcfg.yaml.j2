@@ -1,0 +1,15 @@
+network:
+  version: 2
+  renderer: networkd
+
+  ethernets:
+    {{ wan_interface }}:
+      dhcp4: true
+      dhcp6: false
+
+    {{ lan_interface }}:
+      addresses:
+        - {{ ipv6_server_addr }}
+      dhcp4: false
+      dhcp6: false
+      accept-ra: false

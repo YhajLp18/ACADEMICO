@@ -1,0 +1,15 @@
+interface {{ lan_interface }} {
+    AdvSendAdvert on;
+
+    AdvManagedFlag on;
+    AdvOtherConfigFlag on;
+
+    prefix {{ ipv6_prefix }} {
+        AdvOnLink on;
+        AdvAutonomous off;   # usamos DHCPv6 stateful
+    };
+
+    RDNSS {{ dhcpv6_dns }} {
+        AdvRDNSSLifetime 600;
+    };
+}

@@ -1,0 +1,12 @@
+---
+- name: Configurar servidor DHCP (IPv4 e IPv6) en Ubuntu
+  hosts: servidor_dhcp
+  become: true  # Para ejecutar como root
+  tasks:
+    - name: Configurar servidor DHCP para IPv4
+      import_role:
+        name: dhcp_server
+
+    - name: Configurar servidor radvd para IPv6
+      import_role:
+        name: radvd_configure

@@ -1,0 +1,27 @@
+---
+- name: Actualizar sistema base
+  hosts: todos
+  become: yes
+
+  tasks:
+    - name: Actualizar índice de paquetes (apt update)
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600  # 1 hora
+
+    - name: Actualizar paquetes del sistema (apt upgrade)
+      ansible.builtin.apt:
+        upgrade: dist
+        autoremove: yes
+
+    - name: Comprobar si es necesario reiniciar
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_flag
+
+    - name: Reiniciar si el sistema lo requiere
+      ansible.builtin.reboot:
+        msg: "Reiniciando después de actualización de paquetes"
+        connect_timeout: 5
+        reboot_timeout: 600
+      when: reboot_flag.stat.exists

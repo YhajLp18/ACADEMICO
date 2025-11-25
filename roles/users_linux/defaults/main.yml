@@ -1,0 +1,13 @@
+---
+users_to_manage:
+  - name: adminlab
+    comment: "Admin del laboratorio"
+    shell: /bin/bash
+    groups: "sudo"
+    state: present
+
+  - name: gamer
+    comment: "Usuario de game center"
+    shell: /bin/bash
+    groups: "sudo"
+    state: present
