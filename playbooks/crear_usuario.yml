@@ -1,6 +1,6 @@
 ---
 - name: Playbook general para creación de usuarios
-  hosts: all
+  hosts: local
   become: yes
 
   roles:
