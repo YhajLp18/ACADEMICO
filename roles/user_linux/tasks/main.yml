@@ -1,0 +1,26 @@
+---
+- name: Crear usuarios en Linux
+  ansible.builtin.user:
+    name: "{{ item.nombre }}"
+    shell: /bin/bash
+    groups: "{{ 'sudo' if item.admin else '' }}"
+    state: present
+    create_home: yes
+  loop: "{{ usuarios_linux }}"
+
+- name: Instalar Git en Linux
+  ansible.builtin.package:
+    name: git
+    state: present
+
+- name: Configurar Git para cada usuario Linux
+  ansible.builtin.copy:
+    dest: "/home/{{ item.nombre }}/.gitconfig"
+    content: |
+      [user]
+          name = {{ item.git_name }}
+          email = {{ item.git_email }}
+    owner: "{{ item.nombre }}"
+    group: "{{ item.nombre }}"
+    mode: '0644'
+  loop: "{{ usuarios_linux }}"

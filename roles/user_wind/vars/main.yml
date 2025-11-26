@@ -1,0 +1,14 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for user_wind
+usuarios_win:
+  - nombre: ProfesorWin
+    password: "P@ssw0rd123"
+    admin: true
+    git_name: "Profesor Windows"
+    git_email: "profesor.win@lab.local"
+  - nombre: EstudianteWin
+    password: "P@ssw0rd456"
+    admin: false
+    git_name: "Estudiante Windows"
+    git_email: "estudiante.win@lab.local"

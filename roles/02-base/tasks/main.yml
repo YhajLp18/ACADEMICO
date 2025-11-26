@@ -1,0 +1,16 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for 02-base
+- name: Activar reenvío de paquetes IPv4
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: yes
+
+- name: Activar reenvío de paquetes IPv6
+  sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: '1'
+    state: present
+    reload: yes

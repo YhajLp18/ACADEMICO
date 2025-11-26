@@ -1,9 +1,0 @@
-- name: Restart ISC DHCPv6
-  ansible.builtin.service:
-    name: isc-dhcp-server
-    state: restarted
-
-- name: Restart radvd
-  ansible.builtin.service:
-    name: radvd
-    state: restarted

@@ -1,0 +1,15 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for 04-nat
+- name: Instalar iptables-persistent
+  apt:
+    name: iptables-persistent
+    state: present
+
+- name: Configurar NAT IPv4
+  command: iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE
+  args:
+    warn: false
+
+- name: Guardar reglas iptables
+  command: netfilter-persistent save

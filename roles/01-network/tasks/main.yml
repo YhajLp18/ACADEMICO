@@ -1,0 +1,13 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for 01-network
+- name: Copiar configuración Netplan con IPs fijas
+  copy:
+    src: netplan.yaml
+    dest: /etc/netplan/01-netcfg.yaml
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Aplicar configuración Netplan
+  command: netplan apply

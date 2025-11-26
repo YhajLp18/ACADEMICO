@@ -1,0 +1,22 @@
+---
+- name: Crear usuarios en Windows
+  ansible.windows.win_user:
+    name: "{{ item.nombre }}"
+    password: "{{ item.password }}"
+    groups: "{{ 'Administrators' if item.admin else 'Users' }}"
+    state: present
+  loop: "{{ usuarios_win }}"
+
+- name: Instalar Git en Windows (si usas Chocolatey)
+  ansible.windows.win_chocolatey:
+    name: git
+    state: present
+
+- name: Configurar Git para cada usuario Windows
+  ansible.windows.win_copy:
+    dest: "C:\\Users\\{{ item.nombre }}\\.gitconfig"
+    content: |
+      [user]
+          name = {{ item.git_name }}
+          email = {{ item.git_email }}
+  loop: "{{ usuarios_win }}"

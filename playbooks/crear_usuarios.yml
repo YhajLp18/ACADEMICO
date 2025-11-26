@@ -1,0 +1,8 @@
+---
+- name: Playbook general para creación de usuarios
+  hosts: all
+  become: yes
+
+  roles:
+    - user_linux
+    - user_wind

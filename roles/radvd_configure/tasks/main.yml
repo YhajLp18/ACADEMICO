@@ -1,18 +1,13 @@
 ---
-- name: Instalar radvd para IPv6
+- name: Instalar RADVD
   apt:
     name: radvd
     state: present
     update_cache: yes
 
-- name: Configurar radvd para IPv6
+- name: Copiar configuración de RADVD
   template:
     src: radvd.conf.j2
     dest: /etc/radvd.conf
-    mode: '0644'
-
-- name: Reiniciar el servicio radvd
-  service:
-    name: radvd
-    state: restarted
-    enabled: yes
+  notify:
+    - Reiniciar servicio RADVD

@@ -1,0 +1,28 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for 03-dhcp
+- name: Instalar servidor DHCP
+  apt:
+    name: isc-dhcp-server
+    state: present
+    update_cache: yes
+
+- name: Configurar interfaz DHCP
+  lineinfile:
+    path: /etc/default/isc-dhcp-server
+    regexp: '^INTERFACESv4='
+    line: 'INTERFACESv4="enp0s8"'
+
+- name: Copiar configuración DHCP
+  copy:
+    src: dhcpd.conf
+    dest: /etc/dhcp/dhcpd.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reiniciar DHCP
+  service:
+    name: isc-dhcp-server
+    state: restarted
+    enabled: yes

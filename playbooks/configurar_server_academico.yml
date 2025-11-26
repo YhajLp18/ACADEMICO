@@ -1,0 +1,10 @@
+---
+- name: Configurar servidor de laboratorio completo
+  hosts: dhcpv6_server
+  become: yes
+  roles:
+    - 01-network
+    - 02-base
+    - 03-dhcp
+    - 04-nat
+    - 05-radvd
