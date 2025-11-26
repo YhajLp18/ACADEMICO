@@ -1,26 +1,27 @@
 ---
-- name: Crear usuarios en Linux
+# 1. Listar usuarios existentes
+- name: Listar usuarios actuales en la máquina
+  ansible.builtin.command: cat /etc/passwd
+  register: usuarios_existentes
+
+- name: Mostrar usuarios actuales
+  ansible.builtin.debug:
+    msg: "{{ usuarios_existentes.stdout_lines }}"
+
+# 2. Crear usuarios definidos en vars
+- name: Crear usuarios
   ansible.builtin.user:
     name: "{{ item.nombre }}"
     shell: /bin/bash
     groups: "{{ 'sudo' if item.admin else '' }}"
     state: present
     create_home: yes
-  loop: "{{ usuarios_linux }}"
+  loop: "{{ usuarios_crear }}"
 
-- name: Instalar Git en Linux
-  ansible.builtin.package:
-    name: git
-    state: present
-
-- name: Configurar Git para cada usuario Linux
-  ansible.builtin.copy:
-    dest: "/home/{{ item.nombre }}/.gitconfig"
-    content: |
-      [user]
-          name = {{ item.git_name }}
-          email = {{ item.git_email }}
-    owner: "{{ item.nombre }}"
-    group: "{{ item.nombre }}"
-    mode: '0644'
-  loop: "{{ usuarios_linux }}"
+# 3. Eliminar usuarios definidos en vars
+- name: Eliminar usuarios
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+    remove: yes
+  loop: "{{ usuarios_eliminar }}"

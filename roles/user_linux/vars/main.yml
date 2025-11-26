@@ -1,12 +1,10 @@
-#SPDX-License-Identifier: MIT-0
 ---
-# vars file for user_linux
-usuarios_linux:
+usuarios_crear:
   - nombre: profesor
     admin: true
-    git_name: "Profesor"
-    git_email: "profesor@lab.local"
   - nombre: estudiante
     admin: false
-    git_name: "Estudiante"
-    git_email: "estudiante@lab.local"
+
+usuarios_eliminar:
+  - usuario_antiguo
+  - prueba
